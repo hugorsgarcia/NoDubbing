@@ -1,0 +1,27 @@
+# Editor and OS files
+.DS_Store
+.vscode/
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies (if using npm/node)
+node_modules/
+
+# Temporary files
+tmp/
+temp/
+
+# Package files (if building with tools)
+package-lock.json
+yarn.lock

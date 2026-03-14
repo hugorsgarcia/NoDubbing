@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrueAudio Settings</title>
+  <link rel="stylesheet" href="../styles/global.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎧 TrueAudio</h1>
+      <p class="subtitle">Control YouTube Audio Language</p>
+    </div>
+
+    <div class="content">
+      <div class="setting-group">
+        <label for="language-select" class="label">Preferred Audio Language</label>
+        <select id="language-select" class="select">
+          <option value="original">Original (Default Track)</option>
+          <option value="en">English</option>
+          <option value="es">Spanish (Español)</option>
+          <option value="fr">French (Français)</option>
+          <option value="de">German (Deutsch)</option>
+          <option value="it">Italian (Italiano)</option>
+          <option value="pt">Portuguese (Português)</option>
+          <option value="ja">Japanese (日本語)</option>
+          <option value="ko">Korean (한국어)</option>
+          <option value="zh">Chinese (中文)</option>
+          <option value="ru">Russian (Русский)</option>
+          <option value="ar">Arabic (العربية)</option>
+          <option value="hi">Hindi (हिन्दी)</option>
+        </select>
+      </div>
+
+      <div class="setting-group">
+        <label class="checkbox-container">
+          <input type="checkbox" id="show-toast" checked>
+          <span class="checkmark"></span>
+          <span class="checkbox-label">Show notification when audio switches</span>
+        </label>
+      </div>
+
+      <div class="setting-group">
+        <label class="checkbox-container">
+          <input type="checkbox" id="enable-extension" checked>
+          <span class="checkmark"></span>
+          <span class="checkbox-label">Enable TrueAudio</span>
+        </label>
+      </div>
+
+      <button id="save-btn" class="btn-primary">Save Settings</button>
+      
+      <div id="status-message" class="status-message hidden"></div>
+    </div>
+
+    <div class="footer">
+      <p class="info-text">This extension forces YouTube to use your preferred audio track instead of AI-dubbed versions.</p>
+      <p class="version">v1.0.0</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
