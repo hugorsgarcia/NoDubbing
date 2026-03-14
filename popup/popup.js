@@ -10,31 +10,55 @@ const enableExtensionCheckbox = document.getElementById('enable-extension');
 const saveButton = document.getElementById('save-btn');
 const statusMessage = document.getElementById('status-message');
 
-// Default configuration
+// Default configuration Schema
 const DEFAULT_CONFIG = {
-  preferredLanguage: 'original',
-  showToast: true,
-  enabled: true
+  schemaVersion: 1,
+  preferences: {
+    language: { primary: 'original', fallback: ['en'] },
+    ui: { showToast: true },
+    core: { enabled: true }
+  }
 };
 
 /**
  * Load saved settings from chrome.storage.sync
- * Populates the UI with existing preferences
+ * Transparently upgrades legacy schemas to ensure robust state management
  */
 async function loadSettings() {
   try {
-    const result = await chrome.storage.sync.get(DEFAULT_CONFIG);
+    const rawResult = await chrome.storage.sync.get(null);
+    let config = rawResult;
+
+    // SCHEMA MIGRATION: Se não tem schemaVersion, é um formato legado (v0) solto na raiz
+    if (!config.schemaVersion) {
+        console.log('[TrueAudio] Legacy schema detected. Migrating to v1...');
+        config = {
+            schemaVersion: 1,
+            preferences: {
+                language: { primary: rawResult.preferredLanguage || 'original', fallback: ['en'] },
+                ui: { showToast: rawResult.showToast ?? true },
+                core: { enabled: rawResult.enabled ?? true }
+            }
+        };
+        // Overwrite the storage with the newly structured v1 document
+        await chrome.storage.sync.clear();
+        await chrome.storage.sync.set(config);
+    }
     
-    languageSelect.value = result.preferredLanguage;
-    showToastCheckbox.checked = result.showToast;
-    enableExtensionCheckbox.checked = result.enabled;
+    // Deep Merge with defaults in case of missing keys
+    config = { ...DEFAULT_CONFIG, ...config };
+
+    // Update UI binding from the strict schema paths
+    languageSelect.value = config.preferences.language.primary;
+    showToastCheckbox.checked = config.preferences.ui.showToast;
+    enableExtensionCheckbox.checked = config.preferences.core.enabled;
 
     // Visual feedback
-    if (!result.enabled) {
+    if (!config.preferences.core.enabled) {
       document.body.classList.add('disabled-state');
     }
   } catch (error) {
-    console.error('[TrueAudio] Error loading settings:', error);
+    console.error('[TrueAudio] Error loading settings or migrating schema:', error);
     showStatus('Error loading settings', 'error');
   }
 }
@@ -46,9 +70,12 @@ async function loadSettings() {
 async function saveSettings() {
   try {
     const config = {
-      preferredLanguage: languageSelect.value,
-      showToast: showToastCheckbox.checked,
-      enabled: enableExtensionCheckbox.checked
+      schemaVersion: 1,
+      preferences: {
+        language: { primary: languageSelect.value, fallback: ['en'] },
+        ui: { showToast: showToastCheckbox.checked },
+        core: { enabled: enableExtensionCheckbox.checked }
+      }
     };
 
     await chrome.storage.sync.set(config);
@@ -56,7 +83,7 @@ async function saveSettings() {
     showStatus('✓ Settings saved successfully!', 'success');
 
     // Update UI state
-    if (!config.enabled) {
+    if (!config.preferences.core.enabled) {
       document.body.classList.add('disabled-state');
     } else {
       document.body.classList.remove('disabled-state');

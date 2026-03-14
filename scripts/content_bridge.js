@@ -25,13 +25,31 @@
    */
   async function loadConfig() {
     const defaultConfig = {
-      preferredLanguage: 'original',
-      showToast: true,
-      enabled: true
+      schemaVersion: 1,
+      preferences: {
+        language: { primary: 'original', fallback: ['en'] },
+        ui: { showToast: true },
+        core: { enabled: true }
+      }
     };
 
     try {
-      const config = await chrome.storage.sync.get(defaultConfig);
+      let config = await chrome.storage.sync.get(null);
+      
+      if (!config.schemaVersion) {
+         // Fallback legacy parse if the page loads before popup migration
+         config = {
+             schemaVersion: 1,
+             preferences: {
+                 language: { primary: config.preferredLanguage || 'original', fallback: ['en'] },
+                 ui: { showToast: config.showToast ?? true },
+                 core: { enabled: config.enabled ?? true }
+             }
+         };
+      }
+      
+      // Deep merge with defaults
+      config = { ...defaultConfig, ...config };
       console.log('[TrueAudio Bridge] Configuration loaded:', config);
       return config;
     } catch (error) {

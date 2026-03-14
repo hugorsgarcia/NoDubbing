@@ -20,9 +20,12 @@
 
   // Configuration
   let userConfig = {
-    preferredLanguage: 'original',
-    showToast: true,
-    enabled: true
+    schemaVersion: 1,
+    preferences: {
+      language: { primary: 'original', fallback: ['en'] },
+      ui: { showToast: true },
+      core: { enabled: true }
+    }
   };
 
   const CONFIG_EVENT = 'trueaudio-config';
@@ -90,7 +93,7 @@
       userConfig = payload.config;
       console.log('[TrueAudio Main] Config received:', userConfig);
       
-      if (isVideoPage() && userConfig.enabled) {
+      if (isVideoPage() && userConfig.preferences.core.enabled) {
         attemptAudioSwitch();
       }
     });
@@ -436,7 +439,7 @@
   function attemptAudioSwitch(showNotification) {
     if (showNotification === undefined) showNotification = true;
     
-    if (!userConfig.enabled) {
+    if (!userConfig.preferences.core.enabled) {
       console.log('[TrueAudio Main] Extension is disabled');
       return;
     }
@@ -469,13 +472,13 @@
 
       const currentTrack = getCurrentAudioTrack(player);
 
-      const preferredTrack = findTrackByLanguage(availableTracks, userConfig.preferredLanguage);
+      const preferredTrack = findTrackByLanguage(availableTracks, userConfig.preferences.language.primary);
       
       if (!preferredTrack) {
-        console.warn('[TrueAudio Main] Preferred track not found:', userConfig.preferredLanguage);
+        console.warn('[TrueAudio Main] Preferred track not found:', userConfig.preferences.language.primary);
         console.log('[TrueAudio Debug] Available languages:', availableTracks.map(t => t.xD?.name + ' (' + t.xD?.id + ')').join(', '));
-        if (userConfig.showToast && showNotification) {
-          showToast('⚠️ ' + userConfig.preferredLanguage + ' track not available', 'error');
+        if (userConfig.preferences.ui.showToast && showNotification) {
+          showToast('⚠️ ' + userConfig.preferences.language.primary + ' track not available', 'error');
         }
         return;
       }
@@ -495,9 +498,9 @@
       const success = switchAudioTrack(player, preferredTrack);
 
       if (success) {
-        const trackName = preferredTrack.xD?.name || userConfig.preferredLanguage;
+        const trackName = preferredTrack.xD?.name || userConfig.preferences.language.primary;
         
-        if (userConfig.showToast && showNotification) {
+        if (userConfig.preferences.ui.showToast && showNotification) {
           showToast('🎧 Audio switched to ' + trackName);
         }
 
@@ -506,7 +509,7 @@
 
     }).catch(function(error) {
       console.error('[TrueAudio Main] Error during audio switch:', error);
-      if (userConfig.showToast && showNotification) {
+      if (userConfig.preferences.ui.showToast && showNotification) {
         showToast('❌ Failed to switch audio track', 'error');
       }
     });
