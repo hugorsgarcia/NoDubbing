@@ -7,7 +7,6 @@
 const languageSelect = document.getElementById('language-select');
 const showToastCheckbox = document.getElementById('show-toast');
 const enableExtensionCheckbox = document.getElementById('enable-extension');
-const enableAnalyticsCheckbox = document.getElementById('enable-analytics');
 const saveButton = document.getElementById('save-btn');
 const statusMessage = document.getElementById('status-message');
 
@@ -27,13 +26,7 @@ const DEFAULT_CONFIG = {
  */
 async function loadSettings() {
   try {
-    const [rawSyncResult, rawLocalResult] = await Promise.all([
-      chrome.storage.sync.get(null),
-      chrome.storage.local.get('dynamicTracks')
-    ]);
-
-    let config = rawSyncResult;
-    const dynamicTracks = rawLocalResult.dynamicTracks;
+    let config = await chrome.storage.sync.get(null);
 
     // SCHEMA MIGRATION: Se não tem schemaVersion, é um formato legado (v0) solto na raiz
     if (!config.schemaVersion) {
@@ -54,26 +47,9 @@ async function loadSettings() {
     // Deep Merge with defaults in case of missing keys
     config = { ...DEFAULT_CONFIG, ...config };
 
-    // Dynamic UI Binding (Hydrate select from video tracks if available)
-    if (dynamicTracks && dynamicTracks.length > 0) {
-      console.log('[TrueAudio Popup] Rebuilding Select UI from active video tracks...', dynamicTracks);
-      languageSelect.innerHTML = '<option value="original">Original (Default Track)</option>';
-      
-      dynamicTracks.forEach(track => {
-        const option = document.createElement('option');
-        option.value = track.code;
-        option.textContent = track.name;
-        languageSelect.appendChild(option);
-      });
-    }
-
-    // Update UI binding from the strict schema paths
-    // Even if the preference code (e.g. 'pl') wasn't in the static HTML, 
-    // it will now match the dynamic option.
     languageSelect.value = config.preferences.language.primary;
     showToastCheckbox.checked = config.preferences.ui.showToast;
     enableExtensionCheckbox.checked = config.preferences.core.enabled;
-    enableAnalyticsCheckbox.checked = config.preferences.core.analyticsEnabled;
 
     // Visual feedback
     if (!config.preferences.core.enabled) {
@@ -96,7 +72,7 @@ async function saveSettings() {
       preferences: {
         language: { primary: languageSelect.value, fallback: ['en'] },
         ui: { showToast: showToastCheckbox.checked },
-        core: { enabled: enableExtensionCheckbox.checked, analyticsEnabled: enableAnalyticsCheckbox.checked }
+        core: { enabled: enableExtensionCheckbox.checked, analyticsEnabled: false }
       }
     };
 
