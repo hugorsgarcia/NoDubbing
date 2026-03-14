@@ -10,6 +10,29 @@ const enableExtensionCheckbox = document.getElementById('enable-extension');
 const saveButton = document.getElementById('save-btn');
 const statusMessage = document.getElementById('status-message');
 
+// Static fallback used when no YouTube video has been visited yet
+const STATIC_LANGUAGE_OPTIONS = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish (Español)' },
+  { code: 'fr', name: 'French (Français)' },
+  { code: 'de', name: 'German (Deutsch)' },
+  { code: 'it', name: 'Italian (Italiano)' },
+  { code: 'pt', name: 'Portuguese (Português)' },
+  { code: 'ja', name: 'Japanese (日本語)' },
+  { code: 'ko', name: 'Korean (한국어)' },
+  { code: 'zh', name: 'Chinese (中文)' },
+  { code: 'ru', name: 'Russian (Русский)' },
+  { code: 'ar', name: 'Arabic (العربية)' },
+  { code: 'hi', name: 'Hindi (हिन्दी)' },
+  { code: 'tr', name: 'Turkish (Türkçe)' },
+  { code: 'nl', name: 'Dutch (Nederlands)' },
+  { code: 'pl', name: 'Polish (Polski)' },
+  { code: 'sv', name: 'Swedish (Svenska)' },
+  { code: 'vi', name: 'Vietnamese (Tiếng Việt)' },
+  { code: 'id', name: 'Indonesian (Bahasa Indonesia)' },
+  { code: 'uk', name: 'Ukrainian (Українська)' },
+];
+
 // Default configuration Schema
 const DEFAULT_CONFIG = {
   schemaVersion: 1,
@@ -19,6 +42,28 @@ const DEFAULT_CONFIG = {
     core: { enabled: true, analyticsEnabled: false }
   }
 };
+
+/**
+ * Populate the language <select> with the given track list and restore the saved value.
+ * @param {Array<{code: string, name: string}>} tracks
+ * @param {string} savedPrimary - Previously saved language code
+ */
+function populateLanguageSelect(tracks, savedPrimary) {
+  // Remove all options except the first one ("Original")
+  while (languageSelect.options.length > 1) {
+    languageSelect.remove(1);
+  }
+
+  for (const { code, name } of tracks) {
+    const option = document.createElement('option');
+    option.value = code;
+    option.textContent = name;
+    languageSelect.appendChild(option);
+  }
+
+  // Restore previously saved language (falls back to "original" if not in current list)
+  languageSelect.value = savedPrimary;
+}
 
 /**
  * Load saved settings from chrome.storage.sync
@@ -34,12 +79,11 @@ async function loadSettings() {
         config = {
             schemaVersion: 1,
             preferences: {
-                language: { primary: rawSyncResult.preferredLanguage || 'original', fallback: ['en'] },
-                ui: { showToast: rawSyncResult.showToast ?? true },
-                core: { enabled: rawSyncResult.enabled ?? true, analyticsEnabled: false }
+                language: { primary: config.preferredLanguage || 'original', fallback: ['en'] },
+                ui: { showToast: config.showToast ?? true },
+                core: { enabled: config.enabled ?? true, analyticsEnabled: false }
             }
         };
-        // Overwrite the storage with the newly structured v1 document
         await chrome.storage.sync.clear();
         await chrome.storage.sync.set(config);
     }
@@ -47,7 +91,23 @@ async function loadSettings() {
     // Deep Merge with defaults in case of missing keys
     config = { ...DEFAULT_CONFIG, ...config };
 
-    languageSelect.value = config.preferences.language.primary;
+    // Load language options from the last visited video's audio tracks (if available)
+    const localData = await chrome.storage.local.get('dynamicTracks');
+    const hasDynamicTracks = localData.dynamicTracks && localData.dynamicTracks.length > 0;
+    const tracks = hasDynamicTracks ? localData.dynamicTracks : STATIC_LANGUAGE_OPTIONS;
+
+    populateLanguageSelect(tracks, config.preferences.language.primary);
+
+    // Show hint if no video has been visited yet (static fallback is active)
+    const hint = document.getElementById('tracks-hint');
+    if (hint) {
+      if (hasDynamicTracks) {
+        hint.classList.add('hidden');
+      } else {
+        hint.classList.remove('hidden');
+      }
+    }
+
     showToastCheckbox.checked = config.preferences.ui.showToast;
     enableExtensionCheckbox.checked = config.preferences.core.enabled;
 

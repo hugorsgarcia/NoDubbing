@@ -35,6 +35,83 @@
   const FORCE_CHECK_DURATION = 15000;
   
   // Dicionários Globais de Idioma Extraídos
+  // Maps language codes to display names in the format: "English (NativeName)"
+  // Used to normalize track names regardless of user's YouTube UI language
+  const LANGUAGE_DISPLAY_NAMES = {
+    'af':  'Afrikaans',
+    'am':  'Amharic (አማርኛ)',
+    'ar':  'Arabic (العربية)',
+    'az':  'Azerbaijani (Azərbaycanca)',
+    'be':  'Belarusian (Беларуская)',
+    'bg':  'Bulgarian (Български)',
+    'bn':  'Bengali (বাংলা)',
+    'bs':  'Bosnian (Bosanski)',
+    'ca':  'Catalan (Català)',
+    'cs':  'Czech (Čeština)',
+    'cy':  'Welsh (Cymraeg)',
+    'da':  'Danish (Dansk)',
+    'de':  'German (Deutsch)',
+    'el':  'Greek (Ελληνικά)',
+    'en':  'English',
+    'es':  'Spanish (Español)',
+    'et':  'Estonian (Eesti)',
+    'eu':  'Basque (Euskara)',
+    'fa':  'Persian (فارسی)',
+    'fi':  'Finnish (Suomi)',
+    'fil': 'Filipino',
+    'fr':  'French (Français)',
+    'ga':  'Irish (Gaeilge)',
+    'gl':  'Galician (Galego)',
+    'gu':  'Gujarati (ગુજરાતી)',
+    'he':  'Hebrew (עברית)',
+    'hi':  'Hindi (हिन्दी)',
+    'hr':  'Croatian (Hrvatski)',
+    'hu':  'Hungarian (Magyar)',
+    'hy':  'Armenian (Հայերեն)',
+    'id':  'Indonesian (Bahasa Indonesia)',
+    'is':  'Icelandic (Íslenska)',
+    'it':  'Italian (Italiano)',
+    'ja':  'Japanese (日本語)',
+    'ka':  'Georgian (ქართული)',
+    'kk':  'Kazakh (Қазақша)',
+    'km':  'Khmer (ខ្មែរ)',
+    'kn':  'Kannada (ಕನ್ನಡ)',
+    'ko':  'Korean (한국어)',
+    'lt':  'Lithuanian (Lietuvių)',
+    'lv':  'Latvian (Latviešu)',
+    'mk':  'Macedonian (Македонски)',
+    'ml':  'Malayalam (മലയാളം)',
+    'mn':  'Mongolian (Монгол)',
+    'mr':  'Marathi (मराठी)',
+    'ms':  'Malay (Bahasa Melayu)',
+    'my':  'Burmese (မြန်မာဘာသာ)',
+    'ne':  'Nepali (नेपाली)',
+    'nl':  'Dutch (Nederlands)',
+    'no':  'Norwegian (Norsk)',
+    'pa':  'Punjabi (ਪੰਜਾਬੀ)',
+    'pl':  'Polish (Polski)',
+    'pt':  'Portuguese (Português)',
+    'ro':  'Romanian (Română)',
+    'ru':  'Russian (Русский)',
+    'si':  'Sinhala (සිංහල)',
+    'sk':  'Slovak (Slovenčina)',
+    'sl':  'Slovenian (Slovenščina)',
+    'sq':  'Albanian (Shqip)',
+    'sr':  'Serbian (Српски)',
+    'sv':  'Swedish (Svenska)',
+    'sw':  'Swahili (Kiswahili)',
+    'ta':  'Tamil (தமிழ்)',
+    'te':  'Telugu (తెలుగు)',
+    'th':  'Thai (ภาษาไทย)',
+    'tr':  'Turkish (Türkçe)',
+    'uk':  'Ukrainian (Українська)',
+    'ur':  'Urdu (اردو)',
+    'uz':  'Uzbek (O\'zbek)',
+    'vi':  'Vietnamese (Tiếng Việt)',
+    'zh':  'Chinese (中文)',
+    'zu':  'Zulu (isiZulu)',
+  };
+
   const LANGUAGE_CODE_MAP = {
     'en': ['en', 'en-us', 'en-gb', 'en-au'],
     'pt': ['pt', 'pt-br', 'pt-pt'],
@@ -224,10 +301,10 @@
 
           // Pushing valid tracks to broadcast later
           if (meta && meta.id && meta.name && !meta.name.toLowerCase().includes('original')) {
-            cleanTracks.push({
-              code: extractLangCode(meta.id),
-              name: meta.name
-            });
+            const code = extractLangCode(meta.id);
+            // Normalize to "English (Native)" format regardless of YouTube's UI language
+            const displayName = LANGUAGE_DISPLAY_NAMES[code] || meta.name;
+            cleanTracks.push({ code, name: displayName });
           }
         });
 

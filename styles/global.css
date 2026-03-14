@@ -251,6 +251,17 @@ body.disabled-state {
   margin-bottom: 8px;
 }
 
+.tracks-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.hidden {
+  display: none;
+}
+
 .version {
   font-size: 11px;
   color: var(--text-secondary);

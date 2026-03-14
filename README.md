@@ -27,21 +27,32 @@ YouTube's **AI Dubbing** feature automatically substitutes the original audio of
 
 ## 🌐 Supported Languages
 
-| Language | Code |
+TrueAudio automatically detects and lists **every audio track available on the current video**. When you open the popup on a YouTube video, the language list reflects the actual tracks for that video — not a fixed preset.
+
+The following languages are available as preset fallback options (shown when no video has been visited yet):
+
+| Language | Native Name |
 |---|---|
 | Original (Default Track) | — |
-| English | `en` |
-| Spanish | `es` |
-| French | `fr` |
-| German | `de` |
-| Italian | `it` |
-| Portuguese | `pt` |
-| Japanese | `ja` |
-| Korean | `ko` |
-| Chinese | `zh` |
-| Russian | `ru` |
-| Arabic | `ar` |
-| Hindi | `hi` |
+| English | English |
+| Spanish | Español |
+| French | Français |
+| German | Deutsch |
+| Italian | Italiano |
+| Portuguese | Português |
+| Japanese | 日本語 |
+| Korean | 한국어 |
+| Chinese | 中文 |
+| Russian | Русский |
+| Arabic | العربية |
+| Hindi | हिन्दी |
+| Turkish | Türkçe |
+| Dutch | Nederlands |
+| Polish | Polski |
+| Swedish | Svenska |
+| Vietnamese | Tiếng Việt |
+| Indonesian | Bahasa Indonesia |
+| Ukrainian | Українська |
 
 ---
 

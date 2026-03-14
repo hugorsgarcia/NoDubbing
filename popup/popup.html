@@ -18,19 +18,9 @@
         <label for="language-select" class="label">Preferred Audio Language</label>
         <select id="language-select" class="select">
           <option value="original">Original (Default Track)</option>
-          <option value="en">English</option>
-          <option value="es">Spanish (Español)</option>
-          <option value="fr">French (Français)</option>
-          <option value="de">German (Deutsch)</option>
-          <option value="it">Italian (Italiano)</option>
-          <option value="pt">Portuguese (Português)</option>
-          <option value="ja">Japanese (日本語)</option>
-          <option value="ko">Korean (한국어)</option>
-          <option value="zh">Chinese (中文)</option>
-          <option value="ru">Russian (Русский)</option>
-          <option value="ar">Arabic (العربية)</option>
-          <option value="hi">Hindi (हिन्दी)</option>
+          <!-- Remaining options populated dynamically from the current video's available tracks -->
         </select>
+        <p id="tracks-hint" class="tracks-hint hidden">Open a YouTube video first to see its available languages.</p>
       </div>
 
       <div class="setting-group">
