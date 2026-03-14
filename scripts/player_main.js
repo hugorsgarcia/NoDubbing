@@ -380,6 +380,10 @@
       maxWidth: '400px',
       textAlign: 'center'
     });
+    
+    // Acessibilidade A11y
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
 
     document.body.appendChild(toast);
 
