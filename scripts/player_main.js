@@ -24,7 +24,7 @@
     preferences: {
       language: { primary: 'original', fallback: ['en'] },
       ui: { showToast: true },
-      core: { enabled: true }
+      core: { enabled: true, analyticsEnabled: false }
     }
   };
 
@@ -163,6 +163,46 @@
   }
 
   /**
+   * Analytics Service Stub 
+   */
+  function logAnalytics(eventName, payload) {
+    if (!userConfig.preferences.core.analyticsEnabled) return;
+
+    const data = {
+      event: eventName,
+      timestamp: new Date().toISOString(),
+      payload: payload
+    };
+
+    console.log('[TrueAudio Analytics] 📊 Event Registered:', data);
+    // Future Note: Add fetch() call here to your backend service endpoint
+  }
+
+  /**
+   * Extracts track metadata regardless of minification property names
+   * Safely scans object properties identifying Google's track schema.
+   */
+  function extractTrackMetadata(track) {
+    if (!track) return null;
+    
+    // Some structures keep it directly
+    if (track.id && track.name) {
+       return track;
+    }
+
+    // Iterate properties looking for the deep object
+    for (const key of Object.keys(track)) {
+      const val = track[key];
+      // Google puts audio track id as strings matching format: "hash.langCode.priority" or just lang code
+      if (val && typeof val === 'object' && val.name && val.id !== undefined) {
+         return val; // Returns the full object equivalent to the old track.xD
+      }
+    }
+    
+    return null; // Metadata not found
+  }
+
+  /**
    * Get available audio tracks from the player
    */
   function getAvailableAudioTracks(player) {
@@ -172,14 +212,13 @@
       if (tracks && tracks.length > 0) {
         console.log('[TrueAudio Debug] Found', tracks.length, 'audio tracks:');
         tracks.forEach((track, index) => {
-          // YouTube stores audio info in track.xD object
-          const xD = track.xD || {};
+          const meta = extractTrackMetadata(track) || {};
           console.log('  Track ' + index + ':', {
             trackId: track.id,
-            langId: xD.id,
-            langName: xD.name,
-            isDefault: xD.isDefault,
-            isAutoDubbed: xD.isAutoDubbed
+            langId: meta.id,
+            langName: meta.name,
+            isDefault: meta.isDefault,
+            isAutoDubbed: meta.isAutoDubbed
           });
         });
       }
@@ -197,8 +236,9 @@
   function getCurrentAudioTrack(player) {
     try {
       const track = player.getAudioTrack();
-      if (track && track.xD) {
-        console.log('[TrueAudio Debug] Current track:', track.xD.name, '(' + track.xD.id + ')');
+      const meta = extractTrackMetadata(track);
+      if (meta) {
+        console.log('[TrueAudio Debug] Current track:', meta.name, '(' + meta.id + ')');
       }
       return track;
     } catch (error) {
@@ -208,7 +248,7 @@
   }
 
   /**
-   * Extract language code from xD.id (e.g., "en.1" -> "en", "pt-BR.2" -> "pt-BR")
+   * Extract language code from track.id (e.g., "en.1" -> "en", "pt-BR.2" -> "pt-BR")
    */
   function extractLangCode(xdId) {
     if (!xdId) return null;
@@ -227,28 +267,30 @@
     console.log('[TrueAudio Debug] Searching for original track...');
 
     // Strategy 1: Look for track with "original" in the name (any language)
-    const originalNamedTrack = tracks.find(track => 
-      track.xD && track.xD.name && track.xD.name.toLowerCase().includes('original')
-    );
+    const originalNamedTrack = tracks.find(track => {
+      const meta = extractTrackMetadata(track);
+      return meta && meta.name && meta.name.toLowerCase().includes('original');
+    });
     if (originalNamedTrack) {
-      console.log('[TrueAudio Debug] Found track with "original" in name:', originalNamedTrack.xD.name);
+      console.log('[TrueAudio Debug] Found track with "original" in name:', extractTrackMetadata(originalNamedTrack).name);
       return originalNamedTrack;
     }
 
     // Strategy 2: For tech content, English is usually the original
     // Look for English track (most YouTube tech content is in English)
     const englishTrack = tracks.find(track => {
-      if (!track.xD) return false;
-      const langCode = extractLangCode(track.xD.id);
+      const meta = extractTrackMetadata(track);
+      if (!meta) return false;
+      const langCode = extractLangCode(meta.id);
       return langCode === 'en' || langCode === 'en-us' || langCode === 'en-gb';
     });
     if (englishTrack) {
-      console.log('[TrueAudio Debug] Found English track as likely original:', englishTrack.xD.name);
+      console.log('[TrueAudio Debug] Found English track as likely original:', extractTrackMetadata(englishTrack).name);
       return englishTrack;
     }
 
     // Strategy 3: Return the first track in the list (often the original)
-    console.log('[TrueAudio Debug] Using first track as fallback:', tracks[0]?.xD?.name);
+    console.log('[TrueAudio Debug] Using first track as fallback:', extractTrackMetadata(tracks[0])?.name);
     return tracks[0];
   }
 
@@ -274,33 +316,35 @@
 
     console.log('[TrueAudio Debug] Looking for codes:', targetCodes, 'or names:', targetNames);
 
-    // First: Try EXACT match on language code from xD.id
+    // First: Try EXACT match on language code from metadata property
     for (const track of tracks) {
-      if (!track.xD) continue;
-      const langCode = extractLangCode(track.xD.id);
+      const meta = extractTrackMetadata(track);
+      if (!meta) continue;
+      const langCode = extractLangCode(meta.id);
       
       if (targetCodes.includes(langCode)) {
-        console.log('[TrueAudio Debug] Found EXACT code match:', track.xD.name, '(' + track.xD.id + ')');
+        console.log('[TrueAudio Debug] Found EXACT code match:', meta.name, '(' + meta.id + ')');
         return track;
       }
     }
 
-    // Second: Try matching xD.name against known language names
+    // Second: Try matching string against known language names
     for (const track of tracks) {
-      if (!track.xD || !track.xD.name) continue;
-      const trackNameLower = track.xD.name.toLowerCase();
+      const meta = extractTrackMetadata(track);
+      if (!meta || !meta.name) continue;
+      const trackNameLower = meta.name.toLowerCase();
       
       for (const targetName of targetNames) {
         // Use exact match or starts with, NOT includes
         if (trackNameLower === targetName || trackNameLower.startsWith(targetName)) {
-          console.log('[TrueAudio Debug] Found name match:', track.xD.name, '(' + track.xD.id + ')');
+          console.log('[TrueAudio Debug] Found name match:', meta.name, '(' + meta.id + ')');
           return track;
         }
       }
     }
 
     console.log('[TrueAudio Debug] No match found for:', languageCode);
-    console.log('[TrueAudio Debug] Available tracks:', tracks.map(t => t.xD?.name + ' (' + extractLangCode(t.xD?.id) + ')').join(', '));
+    console.log('[TrueAudio Debug] Available tracks:', tracks.map(t => extractTrackMetadata(t)?.name + ' (' + extractLangCode(extractTrackMetadata(t)?.id) + ')').join(', '));
     return null;
   }
 
@@ -309,15 +353,17 @@
    */
   function switchAudioTrack(player, track, silent = false) {
     try {
+      const meta = extractTrackMetadata(track);
+      
       if (!silent) {
-        console.log('[TrueAudio Debug] Attempting to switch to:', track.xD?.name || 'unknown');
+        console.log('[TrueAudio Debug] Attempting to switch to:', meta?.name || 'unknown');
       }
 
       // YouTube expects the track object itself to be passed to setAudioTrack
       const possibleValues = [
         track,
         track.id,
-        track.xD?.id
+        meta?.id
       ].filter(v => v !== undefined && v !== null);
 
       for (const value of possibleValues) {
@@ -328,7 +374,12 @@
           player.setAudioTrack(value);
           
           if (!silent) {
-            console.log('[TrueAudio Main] Audio track switched to:', track.xD?.name || 'unknown');
+            console.log('[TrueAudio Main] Audio track switched to:', meta?.name || 'unknown');
+            logAnalytics('AudioSwitched', {
+              fromLanguage: extractTrackMetadata(getCurrentAudioTrack(player))?.id,
+              toLanguage: meta?.id,
+              videoId: getCurrentVideoId()
+            });
           }
           return true;
         } catch (e) {
@@ -480,7 +531,7 @@
       
       if (!preferredTrack) {
         console.warn('[TrueAudio Main] Preferred track not found:', userConfig.preferences.language.primary);
-        console.log('[TrueAudio Debug] Available languages:', availableTracks.map(t => t.xD?.name + ' (' + t.xD?.id + ')').join(', '));
+        console.log('[TrueAudio Debug] Available languages:', availableTracks.map(t => extractTrackMetadata(t)?.name + ' (' + extractTrackMetadata(t)?.id + ')').join(', '));
         if (userConfig.preferences.ui.showToast && showNotification) {
           showToast('⚠️ ' + userConfig.preferences.language.primary + ' track not available', 'error');
         }
@@ -502,7 +553,7 @@
       const success = switchAudioTrack(player, preferredTrack);
 
       if (success) {
-        const trackName = preferredTrack.xD?.name || userConfig.preferences.language.primary;
+        const trackName = extractTrackMetadata(preferredTrack)?.name || userConfig.preferences.language.primary;
         
         if (userConfig.preferences.ui.showToast && showNotification) {
           showToast('🎧 Audio switched to ' + trackName);

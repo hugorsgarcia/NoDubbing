@@ -19,9 +19,13 @@ test.describe('TrueAudio Extension E2E', () => {
     const toggleExt = page.locator('#enable-extension');
     await expect(toggleExt).toBeChecked();
 
+    const toggleAnalytics = page.locator('#enable-analytics');
+    await expect(toggleAnalytics).not.toBeChecked(); // MUST be false by default (LGPD)
+
     // Interact and Save
     await langSelect.selectOption('pt');
     await toggleToast.uncheck();
+    await toggleAnalytics.check();
     
     // Check if the visual toast confirmation appears
     await page.locator('#save-btn').click();
@@ -34,6 +38,7 @@ test.describe('TrueAudio Extension E2E', () => {
     await page.reload();
     await expect(langSelect).toHaveValue('pt');
     await expect(toggleToast).not.toBeChecked();
+    await expect(toggleAnalytics).toBeChecked();
   });
 
   test('YouTube Injection Mechanism', async ({ context, page }) => {

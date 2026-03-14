@@ -7,6 +7,7 @@
 const languageSelect = document.getElementById('language-select');
 const showToastCheckbox = document.getElementById('show-toast');
 const enableExtensionCheckbox = document.getElementById('enable-extension');
+const enableAnalyticsCheckbox = document.getElementById('enable-analytics');
 const saveButton = document.getElementById('save-btn');
 const statusMessage = document.getElementById('status-message');
 
@@ -16,7 +17,7 @@ const DEFAULT_CONFIG = {
   preferences: {
     language: { primary: 'original', fallback: ['en'] },
     ui: { showToast: true },
-    core: { enabled: true }
+    core: { enabled: true, analyticsEnabled: false }
   }
 };
 
@@ -37,7 +38,7 @@ async function loadSettings() {
             preferences: {
                 language: { primary: rawResult.preferredLanguage || 'original', fallback: ['en'] },
                 ui: { showToast: rawResult.showToast ?? true },
-                core: { enabled: rawResult.enabled ?? true }
+                core: { enabled: rawResult.enabled ?? true, analyticsEnabled: false }
             }
         };
         // Overwrite the storage with the newly structured v1 document
@@ -52,6 +53,7 @@ async function loadSettings() {
     languageSelect.value = config.preferences.language.primary;
     showToastCheckbox.checked = config.preferences.ui.showToast;
     enableExtensionCheckbox.checked = config.preferences.core.enabled;
+    enableAnalyticsCheckbox.checked = config.preferences.core.analyticsEnabled;
 
     // Visual feedback
     if (!config.preferences.core.enabled) {
@@ -74,7 +76,7 @@ async function saveSettings() {
       preferences: {
         language: { primary: languageSelect.value, fallback: ['en'] },
         ui: { showToast: showToastCheckbox.checked },
-        core: { enabled: enableExtensionCheckbox.checked }
+        core: { enabled: enableExtensionCheckbox.checked, analyticsEnabled: enableAnalyticsCheckbox.checked }
       }
     };
 

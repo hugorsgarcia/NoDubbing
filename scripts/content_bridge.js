@@ -29,7 +29,7 @@
       preferences: {
         language: { primary: 'original', fallback: ['en'] },
         ui: { showToast: true },
-        core: { enabled: true }
+        core: { enabled: true, analyticsEnabled: false }
       }
     };
 
@@ -43,7 +43,7 @@
              preferences: {
                  language: { primary: config.preferredLanguage || 'original', fallback: ['en'] },
                  ui: { showToast: config.showToast ?? true },
-                 core: { enabled: config.enabled ?? true }
+                 core: { enabled: config.enabled ?? true, analyticsEnabled: false }
              }
          };
       }
