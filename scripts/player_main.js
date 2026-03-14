@@ -31,6 +31,41 @@
   const FORCE_CHECK_INTERVAL = 1500;
   const FORCE_CHECK_DURATION = 15000;
   
+  // Dicionários Globais de Idioma Extraídos
+  const LANGUAGE_CODE_MAP = {
+    'en': ['en', 'en-us', 'en-gb', 'en-au'],
+    'pt': ['pt', 'pt-br', 'pt-pt'],
+    'es': ['es', 'es-es', 'es-mx', 'es-419'],
+    'de': ['de', 'de-de'],
+    'fr': ['fr', 'fr-fr', 'fr-ca'],
+    'it': ['it', 'it-it'],
+    'ja': ['ja', 'ja-jp'],
+    'ko': ['ko', 'ko-kr'],
+    'zh': ['zh', 'zh-cn', 'zh-hans', 'zh-tw', 'zh-hant'],
+    'ru': ['ru', 'ru-ru'],
+    'hi': ['hi', 'hi-in'],
+    'ar': ['ar', 'ar-sa'],
+    'tr': ['tr', 'tr-tr'],
+    'bn': ['bn', 'bn-bd', 'bn-in']
+  };
+
+  const LANGUAGE_NAME_MAP = {
+    'en': ['english', 'inglês', 'ingles', 'англи́йский'],
+    'pt': ['português', 'portugues', 'portuguese'],
+    'es': ['español', 'espanhol', 'spanish'],
+    'de': ['deutsch', 'alemão', 'alemao', 'german'],
+    'fr': ['français', 'frances', 'francês', 'french'],
+    'it': ['italiano', 'italian'],
+    'ja': ['日本語', 'japonês', 'japones', 'japanese'],
+    'ko': ['한국어', 'coreano', 'korean'],
+    'zh': ['中文', '简体中文', '繁體中文', 'chinês', 'chines', 'chinese'],
+    'ru': ['русский', 'russo', 'russian'],
+    'hi': ['हिन्दी', 'hindi'],
+    'ar': ['العربية', 'árabe', 'arabe', 'arabic'],
+    'tr': ['türkçe', 'turco', 'turkish'],
+    'bn': ['বাংলা', 'bengali']
+  };
+
   let lastVideoId = null;
   let forceCheckTimer = null;
 
@@ -219,45 +254,9 @@
     // Normalize the search term
     const searchLower = languageCode.toLowerCase();
 
-    // Language code to expected xD.id prefix mapping (EXACT matches only)
-    const languageCodeMap = {
-      'en': ['en', 'en-us', 'en-gb', 'en-au'],
-      'pt': ['pt', 'pt-br', 'pt-pt'],
-      'es': ['es', 'es-es', 'es-mx', 'es-419'],
-      'de': ['de', 'de-de'],
-      'fr': ['fr', 'fr-fr', 'fr-ca'],
-      'it': ['it', 'it-it'],
-      'ja': ['ja', 'ja-jp'],
-      'ko': ['ko', 'ko-kr'],
-      'zh': ['zh', 'zh-cn', 'zh-hans', 'zh-tw', 'zh-hant'],
-      'ru': ['ru', 'ru-ru'],
-      'hi': ['hi', 'hi-in'],
-      'ar': ['ar', 'ar-sa'],
-      'tr': ['tr', 'tr-tr'],
-      'bn': ['bn', 'bn-bd', 'bn-in']
-    };
-
-    // Language display name patterns (for matching xD.name)
-    const languageNameMap = {
-      'en': ['english', 'inglês', 'ingles', 'англи́йский'],
-      'pt': ['português', 'portugues', 'portuguese'],
-      'es': ['español', 'espanhol', 'spanish'],
-      'de': ['deutsch', 'alemão', 'alemao', 'german'],
-      'fr': ['français', 'frances', 'francês', 'french'],
-      'it': ['italiano', 'italian'],
-      'ja': ['日本語', 'japonês', 'japones', 'japanese'],
-      'ko': ['한국어', 'coreano', 'korean'],
-      'zh': ['中文', '简体中文', '繁體中文', 'chinês', 'chines', 'chinese'],
-      'ru': ['русский', 'russo', 'russian'],
-      'hi': ['हिन्दी', 'hindi'],
-      'ar': ['العربية', 'árabe', 'arabe', 'arabic'],
-      'tr': ['türkçe', 'turco', 'turkish'],
-      'bn': ['বাংলা', 'bengali']
-    };
-
     // Find which language group we're searching for
-    let targetCodes = languageCodeMap[searchLower] || [searchLower];
-    let targetNames = languageNameMap[searchLower] || [];
+    let targetCodes = LANGUAGE_CODE_MAP[searchLower] || [searchLower];
+    let targetNames = LANGUAGE_NAME_MAP[searchLower] || [];
 
     console.log('[TrueAudio Debug] Looking for codes:', targetCodes, 'or names:', targetNames);
 
@@ -383,37 +382,41 @@
   function monitorAndForceAudioTrack(player, preferredTrack) {
     const preferredTrackId = preferredTrack.id;
     const videoId = getCurrentVideoId();
-    let checkCount = 0;
-    const maxChecks = FORCE_CHECK_DURATION / FORCE_CHECK_INTERVAL;
+    const startTime = performance.now();
+    let lastCheckTime = startTime;
 
     if (forceCheckTimer) {
-      clearInterval(forceCheckTimer);
+      cancelAnimationFrame(forceCheckTimer);
     }
 
     console.log('[TrueAudio Main] Starting aggressive monitoring for', FORCE_CHECK_DURATION / 1000, 'seconds');
 
-    forceCheckTimer = setInterval(function() {
-      checkCount++;
-
-      if (checkCount >= maxChecks || getCurrentVideoId() !== videoId) {
-        clearInterval(forceCheckTimer);
+    function checkLoop(currentTime) {
+      if (getCurrentVideoId() !== videoId || (currentTime - startTime) >= FORCE_CHECK_DURATION) {
         forceCheckTimer = null;
         console.log('[TrueAudio Main] Monitoring stopped');
         return;
       }
 
-      try {
-        const currentTrack = getCurrentAudioTrack(player);
-        const currentTrackId = currentTrack ? currentTrack.id : null;
+      if (currentTime - lastCheckTime >= FORCE_CHECK_INTERVAL) {
+        lastCheckTime = currentTime;
+        try {
+          const currentTrack = getCurrentAudioTrack(player);
+          const currentTrackId = currentTrack ? currentTrack.id : null;
 
-        if (currentTrackId !== preferredTrackId) {
-          console.log('[TrueAudio Main] YouTube changed audio! Forcing back to preferred track...');
-          switchAudioTrack(player, preferredTrack, true);
+          if (currentTrackId !== preferredTrackId) {
+            console.log('[TrueAudio Main] YouTube changed audio! Forcing back to preferred track...');
+            switchAudioTrack(player, preferredTrack, true);
+          }
+        } catch (error) {
+          // Silent fail during monitoring
         }
-      } catch (error) {
-        // Silent fail during monitoring
       }
-    }, FORCE_CHECK_INTERVAL);
+
+      forceCheckTimer = requestAnimationFrame(checkLoop);
+    }
+
+    forceCheckTimer = requestAnimationFrame(checkLoop);
   }
 
   /**
@@ -506,7 +509,7 @@
       console.log('[TrueAudio Main] YouTube navigation detected');
       
       if (forceCheckTimer) {
-        clearInterval(forceCheckTimer);
+        cancelAnimationFrame(forceCheckTimer);
         forceCheckTimer = null;
       }
 
