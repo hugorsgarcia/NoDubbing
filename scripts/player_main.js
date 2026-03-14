@@ -300,11 +300,18 @@
           });
 
           // Pushing valid tracks to broadcast later
-          if (meta && meta.id && meta.name && !meta.name.toLowerCase().includes('original')) {
+          // NOTE: Do NOT skip tracks whose name contains "original" — YouTube labels the
+          // source language (e.g. English) as "English (original)" and we must include it.
+          // Only skip tracks that have no parseable language code (pure no-language markers).
+          if (meta && meta.id) {
             const code = extractLangCode(meta.id);
-            // Normalize to "English (Native)" format regardless of YouTube's UI language
-            const displayName = LANGUAGE_DISPLAY_NAMES[code] || meta.name;
-            cleanTracks.push({ code, name: displayName });
+            if (code) {
+              const displayName = LANGUAGE_DISPLAY_NAMES[code] || meta.name;
+              // Avoid duplicates (same language code appearing twice)
+              if (!cleanTracks.some(t => t.code === code)) {
+                cleanTracks.push({ code, name: displayName });
+              }
+            }
           }
         });
 
