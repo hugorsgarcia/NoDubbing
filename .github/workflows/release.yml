@@ -1,11 +1,14 @@
 name: Extension Build & Release
+
 on:
   push:
-    tags:
-      - 'v*'
     branches:
       - main
+    tags:
+      - 'v*'
   pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -13,21 +16,44 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Zip Production Asset
         run: zip -r TrueAudioRelease.zip . -x "*.git*" ".github/*" "check-icons.ps1" "*.md" "test*"
-        
+
       - name: Archive Artifact
         uses: actions/upload-artifact@v4
         with:
           name: extension-build
           path: TrueAudioRelease.zip
-          
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+
+      # ── Auto-release on every push to main (not PRs, not manual tags) ──────
+      - name: Generate auto release tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: auto_tag
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          DATE=$(date -u +'%Y.%m.%d')
+          echo "tag=build-${DATE}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "name=Auto Build ${DATE} (${SHORT_SHA})" >> $GITHUB_OUTPUT
+
+      - name: Create auto release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.auto_tag.outputs.tag }}
+          name: ${{ steps.auto_tag.outputs.name }}
+          files: TrueAudioRelease.zip
+          generate_release_notes: true
+          prerelease: true
+
+      # ── Manual versioned release on v* tags ─────────────────────────────────
+      - name: Create versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: TrueAudioRelease.zip
           generate_release_notes: true
+          prerelease: false
