@@ -1,5 +1,5 @@
 {
-  "name": "nodubbing",
+  "name": "trueaudio",
   "version": "1.0.0",
   "description": "A production-ready Chrome Extension that automatically forces YouTube videos to play in your preferred audio language. Say goodbye to forced AI dubbing on technical tutorials!",
   "main": "index.js",

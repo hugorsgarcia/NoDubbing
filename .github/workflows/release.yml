@@ -1,14 +1,30 @@
 name: Extension Build & Release
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  pull_request:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Zip Production Asset
-        run: zip -r NoDubbingRelease.zip . -x "*.git*" "check-icons.ps1" "TESTING.md" "SETUP.md"
+        run: zip -r TrueAudioRelease.zip . -x "*.git*" ".github/*" "check-icons.ps1" "*.md" "test*"
+        
       - name: Archive Artifact
         uses: actions/upload-artifact@v4
         with:
           name: extension-build
-          path: NoDubbingRelease.zip
+          path: TrueAudioRelease.zip
+          
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: TrueAudioRelease.zip
+          generate_release_notes: true

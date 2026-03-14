@@ -1,192 +1,53 @@
-# 🎧 TrueAudio - YouTube Audio Language Controller
-
-A production-ready Chrome Extension that automatically forces YouTube videos to play in your preferred audio language. Say goodbye to forced AI dubbing on technical tutorials!
-
-## 🎯 Problem Statement
-
-YouTube recently enabled "AI Dubbing" by default, which ruins the experience for developers watching technical tutorials in English. The player forces a translated audio track, making it difficult to follow along. **TrueAudio** solves this by automatically switching to your preferred audio language.
-
-## ✨ Features
-
-- **Automatic Audio Switching**: Instantly switches to your preferred language when a video loads
-- **Smart Original Track Detection**: Intelligently identifies the original/default audio track
-- **SPA-Aware**: Handles YouTube's Single Page Application navigation seamlessly
-- **Visual Feedback**: Non-intrusive toast notifications confirm audio switches
-- **Modern UI**: Clean, dark-mode popup interface for easy configuration
-- **Performance Optimized**: Event-driven architecture, no polling or intervals
-- **Secure**: Fully compliant with Manifest V3 security standards
-
-## 🏗️ Architecture
-
-### Two-World Design (Security First)
-
-**Isolated World (Content Script)**
-- `scripts/content_bridge.js`
-- Has access to `chrome.storage` API
-- Reads user preferences
-- Injects main script into page
-- Passes configuration via CustomEvent
-
-**Main World (Injected Script)**
-- `scripts/player_main.js`
-- Direct access to `window.movie_player` (YouTube's internal API)
-- Controls audio track switching
-- Listens for YouTube SPA navigation events
-
-### Event-Driven Architecture
-
-No `setInterval` loops or polling. Uses:
-- `yt-navigate-finish` event for YouTube navigation detection
-- `CustomEvent` for secure cross-world communication
-- Retry logic with exponential backoff for player readiness
-
-## 📁 Project Structure
-
-```
-NoDubbing/
-├── manifest.json                 # Extension configuration (MV3)
-├── popup/
-│   ├── popup.html               # Settings UI
-│   └── popup.js                 # Settings logic & chrome.storage
-├── scripts/
-│   ├── content_bridge.js        # Bridge between worlds
-│   └── player_main.js           # Main player control logic
-├── styles/
-│   └── global.css               # Dark-mode UI styles
-├── icons/                       # Extension icons (16x16, 48x48, 128x128)
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md
-```
-
-## 🚀 Installation
-
-### For Development
-
-1. Clone or download this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in top-right corner)
-4. Click "Load unpacked"
-5. Select the `NoDubbing` folder
-6. The extension is now installed!
-
-### Creating Icons (Required)
-
-The extension requires icon files. Create a simple icon or use these dimensions:
-- 16x16 pixels for toolbar
-- 48x48 pixels for extension management
-- 128x128 pixels for Chrome Web Store
-
-Save them in an `icons/` folder as `icon16.png`, `icon48.png`, and `icon128.png`.
-
-## 🎮 Usage
-
-1. **Click the extension icon** in your Chrome toolbar
-2. **Select your preferred language** from the dropdown
-   - Choose "Original" to always use the default track
-   - Or select a specific language (English, Spanish, etc.)
-3. **Enable/disable notifications** (toggle "Show notification")
-4. **Click "Save Settings"**
-5. **Navigate to YouTube** and play any video with multiple audio tracks
-
-The extension will automatically switch the audio track based on your preference!
-
-## 🛠️ Technical Details
-
-### YouTube Player API Access
-
-```javascript
-const player = window.movie_player;
-const tracks = player.getAvailableAudioTracks();
-const currentTrack = player.getAudioTrack();
-player.setAudioTrack(trackId);
-```
-
-### Language Matching Logic
-
-1. **Exact Match**: Matches `audioTrackId` or `id` directly
-2. **Original Track**: Uses heuristics (isDefault flag, "original" in name, first track)
-3. **Partial Match**: Searches displayName for language code
-4. **Fallback**: Shows error toast if preferred track unavailable
-
-### Race Condition Handling
-
-- Waits for `window.movie_player` to be defined
-- Retries up to 10 times with 300ms delay
-- Handles videos that load before the extension
-
-### YouTube SPA Navigation
-
-- Listens for `yt-navigate-finish` DOM event
-- Detects video changes without page reload
-- Applies audio preference on every video
-
-## 🔒 Security & Privacy
-
-- **No external requests**: All processing happens locally
-- **No data collection**: Zero telemetry or analytics
-- **Minimal permissions**: Only requires `storage` and YouTube host access
-- **No unsafe-eval**: Complies with CSP (Content Security Policy)
-- **Open source**: Fully transparent code
-
-## 🐛 Troubleshooting
-
-### Audio doesn't switch
-
-1. Ensure the extension is **enabled** in the popup
-2. Check if the video has multiple audio tracks (single-track videos can't switch)
-3. Open browser console (F12) and look for `[TrueAudio]` logs
-4. Try refreshing the YouTube page
-
-### Popup doesn't open
-
-1. Check if the extension is loaded in `chrome://extensions/`
-2. Ensure all required files are present
-3. Check for errors in the extension details page
-
-### Toast notifications don't appear
-
-1. Make sure "Show notification" is enabled in settings
-2. Check if YouTube Theater/Fullscreen mode might be hiding it
-3. Verify in console that the script is executing
-
-## 🔧 Development
-
-### Adding New Languages
-
-Edit `popup/popup.html` and add a new option:
-
-```html
-<option value="languageCode">Language Name</option>
-```
-
-### Debugging
-
-1. **Content Script**: Right-click page → Inspect → Console (filter: `[TrueAudio Bridge]`)
-2. **Main Script**: Check page console for `[TrueAudio Main]` logs
-3. **Popup**: Right-click extension icon → Inspect popup
-
-### Building for Production
-
-1. Remove all `console.log` statements (or use a build tool)
-2. Minify JavaScript files
-3. Optimize icon images
-4. Update version in `manifest.json`
-5. Zip the folder for Chrome Web Store submission
-
-## 📝 License
-
-MIT License - Feel free to use, modify, and distribute.
-
-## 🙏 Credits
-
-Built with attention to:
-- Clean architecture
-- Security best practices
-- Performance optimization
-- User experience
+<div align="center">
+  <img src="icons/icon128.png" alt="TrueAudio Logo" width="128" />
+  <h1>🎧 TrueAudio</h1>
+  <p><strong>A Chrome Extension that forces YouTube videos to play in your preferred audio language.</strong></p>
+</div>
 
 ---
 
-**Made by developers, for developers.** No more AI-dubbed tutorials! 🎉
+## 🚀 O que é o TrueAudio?
+O YouTube recentemente lançou a funcionalidade de **Dublagem Automática (AI Dubbing)**. Isso faz com que vídeos estrangeiros, especialmente tutoriais técnicos ou conteúdo original, sejam reproduzidos automaticamente com dublagens robóticas, muitas vezes difíceis de desabilitar de forma permanente. 
+
+O **TrueAudio** soluciona isso! Ele reconhece *dinamicamente* quais são as faixas de áudio nativas de um vídeo e força o YouTube a usar sempre a sua escolhida (ex: Inglês, Espanhol, ou o Idioma Original do criador de conteúdo).
+
+---
+
+## ⚙️ Funcionalidades
+- **Detecção Rica (Bottom-Up):** A extensão não conta mais com uma listagem "fingida" e fixa de idiomas; ela detecta os metadados do vídeo que está passando e mostra exatamente quais idiomas estão disponíveis no momento para você escolher (Hindi, Coreano, etc).
+- **Extremamente Leve:** Não exige permissões invasivas de rede. Tudo é rodado estritamente na DOM da página do YouTube com *Event Dispatchers* assíncronos que não sobrecarregam sua aba.
+- **Resiliência Anti-Atualização:** Ignora ofuscação de código do Google (Closure Compiler), encontrando os objetos de áudio através da busca em profundidade de instâncias. Isso significa que a extensão não vai parar de funcionar silenciosamente de uma semana para a outra!
+- **Privacidade em 1º Lugar:** Nós respeitamos a LGPD/GDPR. Não injetamos iframes ou pixels de rastreamento estritos. O Analytics é totalmente `Desabilitado (Opt-out)` por padrão!
+
+---
+
+## 🛠️ Tutorial de Instalação (Fácil)
+
+Como a versão está em desenvolvimento antes de ir para a Google Chrome Store, você pode instalar localmente no seu navegador em menos de 1 minuto:
+
+1. Acesse o painel de **Releases** na aba à direita deste repositório.
+2. Baixe a última versão compactada chamada `TrueAudioRelease.zip` e a extraia em uma pasta de sua escolha. (*Você também pode baixar diretamente o repositório como código-fonte*).
+3. Abra o Google Chrome e digite na barra de endereços: `chrome://extensions/`
+4. No canto superior direito da página, ative a opção **Modo do desenvolvedor** (Developer mode).
+5. Clique no botão superior à esquerda **"Carregar sem compactação" (Load unpacked)**.
+6. Selecione a pasta que você acabou de extrair!
+
+Pronto! Acesse o YouTube e clique no botão do **TrueAudio** na sua de plugins para abrir o Popup de configurações. Mude para "Inglês" e ele será sempre lembrado!
+
+---
+
+## 💻 Para Desenvolvedores (Build & Deploy)
+
+O ciclo de vida da aplicação é automatizado com maestria no **GitHub Actions**. Quando você estiver validado ou testado seus pacotes na branch `development`, realizar um sistema de *Git Tag* engatilhará uma release pronta para ZIP:
+
+```bash
+git checkout main
+git tag v1.0.1
+git push origin v1.0.1
+```
+Isto fará com que a nuvem gere um `.zip` apenas com os arquivos necessários, descartando as pastas `/tests`, configs do Github e arquivos md extras.
+
+### Permissões e Segurança Pura
+- `content_bridge.js` cria o token (`dataset.nonce`) e o injeta na camada main world antes de plugar o hook do Player Engine nativo (`player_main.js`).
+- O popup utiliza cache efêmero de janela `chrome.storage.local` para hidratar sua UI interativa.
+- Nenhuma permissão host indesejada: Acesso irrestrito a `https://www.youtube.com/*`.
