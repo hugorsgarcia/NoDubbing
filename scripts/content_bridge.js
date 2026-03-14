@@ -17,6 +17,7 @@
 
   const SCRIPT_ID = 'trueaudio-main-script';
   const CONFIG_EVENT = 'trueaudio-config';
+  const INJECTED_NONCE = crypto.randomUUID();
 
   /**
    * Load configuration from chrome.storage.sync
@@ -55,6 +56,7 @@
       script.id = SCRIPT_ID;
       script.src = chrome.runtime.getURL('scripts/player_main.js');
       script.type = 'text/javascript';
+      script.dataset.nonce = INJECTED_NONCE; // Injeta Token de Validação para a Main API
       
       // Wait for script to load before continuing
       script.onload = () => {
@@ -88,8 +90,12 @@
   function sendConfigToMainWorld(config) {
     // Dispatch with a small delay to ensure script is ready
     setTimeout(() => {
+      // Send token embedded inside detail wrapper
       const event = new CustomEvent(CONFIG_EVENT, {
-        detail: config
+        detail: {
+          config: config,
+          token: INJECTED_NONCE
+        }
       });
       document.dispatchEvent(event);
       console.log('[TrueAudio Bridge] Config sent to main world:', config);

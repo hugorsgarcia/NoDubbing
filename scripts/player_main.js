@@ -73,10 +73,21 @@
 
   /**
    * Listen for configuration from content_bridge.js
+   * Authenticates event payload against injected nonce
    */
   function listenForConfig() {
+    const scriptTag = document.getElementById('trueaudio-main-script');
+    const EXPECTED_NONCE = scriptTag ? scriptTag.dataset.nonce : null;
+
     document.addEventListener(CONFIG_EVENT, (event) => {
-      userConfig = event.detail;
+      const payload = event.detail;
+      
+      if (!EXPECTED_NONCE || !payload || payload.token !== EXPECTED_NONCE) {
+        console.warn('[TrueAudio Main] Unauthorized config event intercepted. Ignored.');
+        return;
+      }
+
+      userConfig = payload.config;
       console.log('[TrueAudio Main] Config received:', userConfig);
       
       if (isVideoPage() && userConfig.enabled) {
