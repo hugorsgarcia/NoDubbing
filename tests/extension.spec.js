@@ -6,6 +6,17 @@ test.describe('TrueAudio Extension E2E', () => {
     // Navigating directly to the extension popup HTML
     await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
 
+    // Injetar Mock Dinâmico para renderizar 'pt' e 'hi' 
+    await page.evaluate(() => {
+        chrome.storage.local.set({ dynamicTracks: [
+            { code: 'pt', name: 'Português' },
+            { code: 'hi', name: 'Hindi' }
+        ]});
+    });
+    
+    // Forçar recarregamento do popup para absorver o Fake Local Storage
+    await page.reload();
+
     // Verify UI Elements
     await expect(page.locator('h1')).toHaveText('🎧 TrueAudio');
     

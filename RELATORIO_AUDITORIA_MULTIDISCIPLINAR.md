@@ -96,12 +96,15 @@ A arquitetura do software funciona com:
 A arquitetura do **"TrueAudio"** é robusta na entrega de sua Promessa Principal (Core Value), limpa perante as regras punitivas da Web Store (sancionista pela Manifest V3) e possui desempenho razoável baseada em delegação SPA. Porém, necessitam-se ajustes fundamentais de proteção operacional e ciclo de vida de release (ALM - *Application Lifecycle Management*).
 
 ### 🚀 Plano Mestre de Mitigação:
-1. **Curto Prazo (Próximos 2 dias):**
+1. **Curto Prazo (Próximos 2 dias):** [CONCLUÍDO]
    - Gerar os KITS visuais faltantes para a publicação do MVP na Loja Oficial (Desbloqueio do PO).
    - Inserir Atributos ARIA/Roles no Toast via JavaScript (`player_main.js`) (Resolução Rápida QA).
-2. **Médio Prazo (Próxima Release):**
+2. **Médio Prazo (Próxima Release):** [CONCLUÍDO]
    - Criar uma estratégia resiliente para recuperar o idioma do track ignorando minificações como o `.xD`, mas iterando nas chaves numéricas iteráveis passíveis do objeto de resposta do `getAvailableAudioTracks()`.
    - Implementar o Pipeline no GH Actions do ZIP de deploy (Correção de CI/CD).
    - Configurar Auth Token / Nonce Local em trânsito no `CustomEvent` (Fix de Segurança).
-3. **Longo Prazo:**
+3. **Longo Prazo:** [CONCLUÍDO]
    - Montar um boilerplate com UI Testing Automatizado (Puppeteer/Playwright) e adicionar estrutura analítica nativa anônima perante permissão opt-in. Extrapolar modelo de dados JSON da Storage API.
+
+### 🌟 Entregas Adicionais (Pós-Auditoria)
+- **Sincronização Dinâmica (UI & Player API):** Substituição do Dropdown engessado do Popup por um gerador Bottom-Up reativo, que agrupa os códigos dinâmicos contidos no player de um vídeo ativo e injeta organicamente as opções no HTML, preenchendo o `chrome.storage.local`. Soluciona o tracking cego para idiomas sem suporte na listagem fallback anterior (ex: Hindi, Bengali, etc).

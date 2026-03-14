@@ -208,6 +208,7 @@
   function getAvailableAudioTracks(player) {
     try {
       const tracks = player.getAvailableAudioTracks();
+      const cleanTracks = [];
       
       if (tracks && tracks.length > 0) {
         console.log('[TrueAudio Debug] Found', tracks.length, 'audio tracks:');
@@ -220,7 +221,23 @@
             isDefault: meta.isDefault,
             isAutoDubbed: meta.isAutoDubbed
           });
+
+          // Pushing valid tracks to broadcast later
+          if (meta && meta.id && meta.name && !meta.name.toLowerCase().includes('original')) {
+            cleanTracks.push({
+              code: extractLangCode(meta.id),
+              name: meta.name
+            });
+          }
         });
+
+        // Broadcast alive tracks back to Bridge/Extension
+        if (cleanTracks.length > 0) {
+           const event = new CustomEvent('trueaudio-tracks-update', {
+             detail: { tracks: cleanTracks }
+           });
+           document.dispatchEvent(event);
+        }
       }
       
       return tracks || [];

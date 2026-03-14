@@ -27,8 +27,13 @@ const DEFAULT_CONFIG = {
  */
 async function loadSettings() {
   try {
-    const rawResult = await chrome.storage.sync.get(null);
-    let config = rawResult;
+    const [rawSyncResult, rawLocalResult] = await Promise.all([
+      chrome.storage.sync.get(null),
+      chrome.storage.local.get('dynamicTracks')
+    ]);
+
+    let config = rawSyncResult;
+    const dynamicTracks = rawLocalResult.dynamicTracks;
 
     // SCHEMA MIGRATION: Se não tem schemaVersion, é um formato legado (v0) solto na raiz
     if (!config.schemaVersion) {
@@ -36,9 +41,9 @@ async function loadSettings() {
         config = {
             schemaVersion: 1,
             preferences: {
-                language: { primary: rawResult.preferredLanguage || 'original', fallback: ['en'] },
-                ui: { showToast: rawResult.showToast ?? true },
-                core: { enabled: rawResult.enabled ?? true, analyticsEnabled: false }
+                language: { primary: rawSyncResult.preferredLanguage || 'original', fallback: ['en'] },
+                ui: { showToast: rawSyncResult.showToast ?? true },
+                core: { enabled: rawSyncResult.enabled ?? true, analyticsEnabled: false }
             }
         };
         // Overwrite the storage with the newly structured v1 document
@@ -49,7 +54,22 @@ async function loadSettings() {
     // Deep Merge with defaults in case of missing keys
     config = { ...DEFAULT_CONFIG, ...config };
 
+    // Dynamic UI Binding (Hydrate select from video tracks if available)
+    if (dynamicTracks && dynamicTracks.length > 0) {
+      console.log('[TrueAudio Popup] Rebuilding Select UI from active video tracks...', dynamicTracks);
+      languageSelect.innerHTML = '<option value="original">Original (Default Track)</option>';
+      
+      dynamicTracks.forEach(track => {
+        const option = document.createElement('option');
+        option.value = track.code;
+        option.textContent = track.name;
+        languageSelect.appendChild(option);
+      });
+    }
+
     // Update UI binding from the strict schema paths
+    // Even if the preference code (e.g. 'pl') wasn't in the static HTML, 
+    // it will now match the dynamic option.
     languageSelect.value = config.preferences.language.primary;
     showToastCheckbox.checked = config.preferences.ui.showToast;
     enableExtensionCheckbox.checked = config.preferences.core.enabled;

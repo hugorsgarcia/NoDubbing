@@ -134,6 +134,21 @@
   }
 
   /**
+   * Listen for available tracks broadcasted from the Main World player
+   * Saves it to local storage so the popup can rebuild its languages dynamically
+   */
+  function setupTracksListener() {
+    document.addEventListener('trueaudio-tracks-update', (event) => {
+      const tracks = event.detail.tracks;
+      if (tracks && tracks.length > 0) {
+        chrome.storage.local.set({ dynamicTracks: tracks }, () => {
+          console.log('[TrueAudio Bridge] Saved ' + tracks.length + ' dynamic tracks to local storage');
+        });
+      }
+    });
+  }
+
+  /**
    * Initialize the bridge
    */
   async function initialize() {
@@ -148,6 +163,9 @@
 
     // Step 3: Setup listener for popup updates
     setupMessageListener();
+    
+    // Step 3.5: Setup listener for track extraction (Bottom-up)
+    setupTracksListener();
 
     // Step 4: Listen for storage changes
     chrome.storage.onChanged.addListener((changes, namespace) => {
