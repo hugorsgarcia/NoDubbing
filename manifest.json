@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TrueAudio - YouTube Audio Language Controller",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automatically forces YouTube videos to play in your preferred audio language (Original/English). No more forced AI dubbing.",
   "permissions": [
     "storage"
