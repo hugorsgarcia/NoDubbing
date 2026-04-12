@@ -60,13 +60,13 @@ The following languages are available as preset fallback options (shown when no 
 
 ### From the Chrome Web Store *(recommended)*
 
-1. Visit the [TrueAudio page on the Chrome Web Store](#).
+1. Visit the [TrueAudio page on the Chrome Web Store](https://chrome.google.com/webstore/detail/trueaudio-youtube-audio-l/bcnghhkaekjmlpognnjphgchfjbmhnab).
 2. Click **Add to Chrome**.
 3. Go to YouTube, click the TrueAudio icon in your toolbar, choose your preferred language, and click **Save Settings**.
 
 ### Manual Installation (Developer Mode)
 
-1. Download the latest release ZIP from the [Releases](../../releases) page and extract it.
+1. Download the latest release ZIP from the [Releases](https://github.com/hugorsgarcia/TrueAudio/releases) page and extract it.
 2. Open Chrome and navigate to `chrome://extensions/`.
 3. Enable **Developer mode** in the top-right corner.
 4. Click **Load unpacked** and select the extracted folder.
